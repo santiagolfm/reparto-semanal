@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reparto semanal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12181F;
+    --ink-soft:#1C242C;
+    --paper:#F3EFE3;
+    --paper-line:#CFC4A6;
+    --paper-line-soft:#DED5BC;
+    --brass:#A9793B;
+    --brass-deep:#8A6029;
+    --moss:#3F6650;
+    --rust:#A83B32;
+    --text-dark:#1D2420;
+    --text-muted:#736A5A;
+    --text-on-ink:#EDE8DA;
+    --text-on-ink-muted:#9C9384;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; color:var(--text-dark); background:var(--ink); }
+  .app{ max-width:960px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
+  header.top{ background:var(--ink); padding:36px 28px 0 28px; }
+  header.top h1{ font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:34px; color:var(--text-on-ink); margin:0 0 6px 0; letter-spacing:0.2px; }
+  header.top p{ font-size:14.5px; color:var(--text-on-ink-muted); margin:0 0 26px 0; max-width:54ch; line-height:1.5; }
+  .tabs{ display:flex; gap:4px; padding-left:2px; }
+  .tab-btn{ font-family:'Inter',sans-serif; font-size:14.5px; font-weight:500; padding:11px 20px; border:none; border-radius:8px 8px 0 0; cursor:pointer; background:var(--ink-soft); color:var(--text-on-ink-muted); transition:background .15s ease, color .15s ease; }
+  .tab-btn:hover{ color:var(--text-on-ink); }
+  .tab-btn.active{ background:var(--paper); color:var(--text-dark); }
+  main.paper{ background:var(--paper); flex:1; padding:34px 28px 60px 28px; }
+  .section-lead{ font-size:14.5px; color:var(--text-muted); margin:0 0 24px 0; max-width:62ch; line-height:1.55; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:12px; color:var(--text-muted); font-weight:500; }
+  .field input, .field select{ font-family:'Inter',sans-serif; font-size:14px; padding:9px 11px; border:1px solid var(--paper-line); border-radius:6px; background:#FCFAF3; color:var(--text-dark); min-width:120px; }
+  .field input:focus, .field select:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+  .field.grow input{ min-width:180px; }
+  button.primary{ font-family:'Inter',sans-serif; font-size:14px; font-weight:600; padding:10px 18px; border:none; border-radius:6px; background:var(--brass); color:#FCFAF3; cursor:pointer; height:38px; white-space:nowrap; }
+  button.primary:hover{ background:var(--brass-deep); }
+  button.secondary{ font-family:'Inter',sans-serif; font-size:13px; font-weight:500; padding:7px 13px; border:1px solid var(--paper-line); border-radius:6px; background:transparent; color:var(--text-dark); cursor:pointer; white-space:nowrap; }
+  button.secondary:hover{ border-color:var(--brass); color:var(--brass-deep); }
+
+  .asset-card{ border-bottom:1px solid var(--paper-line-soft); padding:18px 0; }
+  .asset-card:first-of-type{ border-top:1px solid var(--paper-line); }
+  .asset-head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .asset-head .name{ font-size:15.5px; font-weight:500; display:flex; align-items:center; flex:1; min-width:140px; }
+  .swatch{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:9px; flex-shrink:0; }
+  .pct-input{ width:60px; font-family:'IBM Plex Mono', monospace; font-size:13.5px; padding:5px 7px; border:1px solid var(--paper-line); border-radius:5px; background:#FCFAF3; color:var(--text-dark); }
+  .pct-unit{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--text-muted); margin-left:4px; margin-right:14px; }
+  .del-btn{ background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:13px; font-family:'Inter',sans-serif; padding:4px 6px; }
+  .del-btn:hover{ color:var(--rust); }
+
+  .toggle-btn{
+    width:22px; height:22px; flex-shrink:0;
+    border:1px solid var(--paper-line);
+    border-radius:5px;
+    background:#FCFAF3;
+    color:var(--text-muted);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    padding:0;
+  }
+  .toggle-btn:hover{ border-color:var(--brass); color:var(--brass-deep); }
+  .toggle-btn.open{ background:var(--brass); color:#FCFAF3; border-color:var(--brass); }
+  .subs-hint{ font-family:'Inter',sans-serif; font-size:12.5px; color:var(--text-muted); padding-top:6px; }
+
+  .subs{ margin:14px 0 0 21px; padding-left:16px; border-left:2px solid var(--paper-line); }
+  .sub-row{ display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14px; }
+  .sub-row .name{ flex:1; color:var(--text-dark); }
+  .add-sub-row{ display:flex; align-items:center; gap:8px; padding-top:10px; }
+  .add-sub-row input[type=text]{ font-family:'Inter',sans-serif; font-size:13.5px; padding:6px 9px; border:1px solid var(--paper-line); border-radius:5px; background:#FCFAF3; flex:1; min-width:100px; }
+  .add-sub-row input[type=number]{ font-family:'IBM Plex Mono', monospace; font-size:13.5px; padding:6px 8px; border:1px solid var(--paper-line); border-radius:5px; background:#FCFAF3; width:64px; }
+
+  .form-row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-top:26px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{ text-align:left; padding:0 12px 12px 10px; border-bottom:1px solid var(--paper-line); vertical-align:bottom; white-space:nowrap; }
+  thead th .h-asset{ font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; color:var(--text-dark); display:block; }
+  thead th .h-sub{ font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:400; color:var(--text-muted); display:block; margin-top:2px; }
+  tbody td{ padding:12px 12px 12px 10px; border-bottom:1px solid var(--paper-line-soft); font-family:'IBM Plex Mono', monospace; font-size:13.5px; white-space:nowrap; }
+  tbody td.date-cell{ font-family:'Inter',sans-serif; font-size:13.5px; }
+  tbody tr:last-child td{ border-bottom:none; }
+
+  .totals-line{ display:flex; align-items:center; gap:10px; padding:14px 0 4px 0; font-weight:600; font-size:14px; }
+  .status-pill{ display:inline-block; font-family:'Inter',sans-serif; font-size:12px; font-weight:500; padding:3px 10px; border-radius:20px; }
+  .status-ok{ background:rgba(63,102,80,0.14); color:var(--moss); }
+  .status-warn{ background:rgba(168,59,50,0.12); color:var(--rust); }
+  .empty-state{ padding:40px 10px; text-align:center; color:var(--text-muted); font-size:14.5px; }
+  .table-scroll{ overflow-x:auto; }
+  .cell-amount{ font-weight:600; }
+  .price-input{
+    display:block;
+    width:76px;
+    margin-top:5px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    padding:3px 6px;
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    background:#FCFAF3;
+    color:var(--text-muted);
+  }
+  .price-input:focus{ outline:2px solid var(--brass); outline-offset:1px; color:var(--text-dark); }
+  .summary-block{ margin-top:36px; }
+  .summary-title{ font-family:'Fraunces',serif; font-style:italic; font-size:19px; color:var(--text-dark); margin:0 0 14px 0; }
+  .qty-muted{ color:var(--text-muted); font-size:12px; }
+  .loading{ color:var(--text-on-ink-muted); font-family:'IBM Plex Mono',monospace; font-size:13px; padding:60px 28px; }
+  @media (max-width:640px){
+    header.top{ padding:26px 18px 0 18px; }
+    main.paper{ padding:26px 18px 50px 18px; }
+    header.top h1{ font-size:27px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Reparto semanal</h1>
+    <p>Cargá tu ingreso de la semana en dólares y la app calcula cuánto destinar a cada activo, incluidas sus subdivisiones.</p>
+    <div class="tabs">
+      <button class="tab-btn" id="tab-btn-assets" onclick="setTab('assets')">Activos</button>
+      <button class="tab-btn" id="tab-btn-income" onclick="setTab('income')">Ingresos</button>
+    </div>
+  </header>
+  <main class="paper" id="content">
+    <div class="loading">Cargando tu cartera…</div>
+  </main>
+</div>
+
+<script>
+const ASSET_COLORS = ['#A9793B','#3F6650','#4A6FA5','#A83B32','#6B4C6B','#C08A2E','#3B7A8A'];
+
+let state = { assets: [], entries: [] };
+let activeTab = 'assets';
+let expandedAssets = new Set();
+
+async function loadState(){
+  try{
+    const a = localStorage.getItem('reparto-semanal-assets');
+    state.assets = a ? JSON.parse(a) : [];
+  }catch(e){ state.assets = []; }
+  try{
+    const en = localStorage.getItem('reparto-semanal-entries');
+    state.entries = en ? JSON.parse(en) : [];
+  }catch(e){ state.entries = []; }
+  state.assets.forEach(a=>{ if(!a.subs) a.subs = []; });
+  render();
+}
+
+async function saveAssets(){
+  try{ localStorage.setItem('reparto-semanal-assets', JSON.stringify(state.assets)); }
+  catch(e){ console.error('No se pudo guardar activos', e); }
+}
+async function saveEntries(){
+  try{ localStorage.setItem('reparto-semanal-entries', JSON.stringify(state.entries)); }
+  catch(e){ console.error('No se pudo guardar ingresos', e); }
+}
+
+function setTab(t){ activeTab = t; render(); }
+
+function fmtMoney(amount){
+  try{
+    return new Intl.NumberFormat('es-AR', { style:'currency', currency:'USD', maximumFractionDigits:2 }).format(amount);
+  }catch(e){ return '$' + amount.toFixed(2); }
+}
+
+function totalPct(){ return state.assets.reduce((s,a)=> s + (Number(a.pct)||0), 0); }
+function subTotalPct(asset){ return asset.subs.reduce((s,x)=> s + (Number(x.pct)||0), 0); }
+
+function addAsset(name, pct){
+  if(!name.trim()) return;
+  const id = 'a'+Date.now();
+  state.assets.push({ id, name:name.trim(), pct:Number(pct)||0, subs:[] });
+  expandedAssets.add(id);
+  saveAssets(); render();
+}
+function updateAssetPct(id, pct){
+  const a = state.assets.find(x=>x.id===id);
+  if(a){ a.pct = Number(pct)||0; saveAssets(); render(); }
+}
+function removeAsset(id){
+  state.assets = state.assets.filter(a=>a.id!==id);
+  saveAssets(); render();
+}
+function addSub(assetId, name, pct){
+  if(!name.trim()) return;
+  const a = state.assets.find(x=>x.id===assetId);
+  if(!a) return;
+  a.subs.push({ id:'s'+Date.now(), name:name.trim(), pct:Number(pct)||0 });
+  saveAssets(); render();
+}
+function updateSubPct(assetId, subId, pct){
+  const a = state.assets.find(x=>x.id===assetId);
+  if(!a) return;
+  const s = a.subs.find(x=>x.id===subId);
+  if(s){ s.pct = Number(pct)||0; saveAssets(); render(); }
+}
+function removeSub(assetId, subId){
+  const a = state.assets.find(x=>x.id===assetId);
+  if(!a) return;
+  a.subs = a.subs.filter(x=>x.id!==subId);
+  saveAssets(); render();
+}
+
+function addEntry(date, amount){
+  if(!amount || Number(amount)<=0) return;
+  state.entries.push({ id:'e'+Date.now(), date, amount:Number(amount) });
+  state.entries.sort((x,y)=> x.date < y.date ? 1 : -1);
+  saveEntries(); render();
+}
+function removeEntry(id){
+  state.entries = state.entries.filter(e=>e.id!==id);
+  saveEntries(); render();
+}
+function updateEntryPrice(entryId, colKey, price){
+  const e = state.entries.find(x=>x.id===entryId);
+  if(!e) return;
+  if(!e.prices) e.prices = {};
+  if(price === '' || price === null || Number(price) <= 0){
+    delete e.prices[colKey];
+  }else{
+    e.prices[colKey] = Number(price);
+  }
+  saveEntries(); render();
+}
+
+function render(){
+  document.getElementById('tab-btn-assets').className = 'tab-btn' + (activeTab==='assets' ? ' active' : '');
+  document.getElementById('tab-btn-income').className = 'tab-btn' + (activeTab==='income' ? ' active' : '');
+  const content = document.getElementById('content');
+  content.innerHTML = activeTab === 'assets' ? renderAssetsTab() : renderIncomeTab();
+  wireAssetsTab();
+  wireIncomeTab();
+}
+
+function renderAssetsTab(){
+  const t = totalPct();
+  const cards = state.assets.map((a,i)=>{
+    const color = ASSET_COLORS[i % ASSET_COLORS.length];
+    const isOpen = expandedAssets.has(a.id);
+    const subTotal = a.subs.length ? subTotalPct(a) : null;
+    const subStatus = subTotal===null ? '' : (subTotal===100
+      ? '<span class="status-pill status-ok" style="margin-left:8px;">100%</span>'
+      : '<span class="status-pill status-warn" style="margin-left:8px;">suman ' + subTotal + '%</span>');
+
+    let subsBlock;
+    if(!isOpen){
+      subsBlock = a.subs.length
+        ? `<div class="subs-hint" style="margin-left:31px;">${a.subs.length} subdivisión${a.subs.length>1?'es':''} — tocá + para verlas</div>`
+        : '';
+    }else{
+      const subRows = a.subs.map(s=>`
+        <div class="sub-row">
+          <span class="name">${escapeHtml(s.name)}</span>
+          <input class="pct-input" type="number" min="0" max="100" step="1" value="${s.pct}" data-sub-asset="${a.id}" data-sub-id="${s.id}">
+          <span class="pct-unit">% de ${escapeHtml(a.name)}</span>
+          <button class="del-btn" data-del-sub-asset="${a.id}" data-del-sub-id="${s.id}">Quitar</button>
+        </div>`).join('');
+      subsBlock = `
+        <div class="subs">
+          ${subRows}
+          ${a.subs.length ? `<div style="padding-top:4px;">${subStatus}</div>` : ''}
+          <div class="add-sub-row">
+            <input type="text" placeholder="Subdividir en, ej: Solana" data-newsub-name="${a.id}">
+            <input type="number" placeholder="%" min="0" max="100" data-newsub-pct="${a.id}">
+            <button class="secondary" data-newsub-add="${a.id}">Agregar subdivisión</button>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="asset-card">
+        <div class="asset-head">
+          <button class="toggle-btn${isOpen ? ' open' : ''}" data-toggle-asset="${a.id}" title="${isOpen ? 'Cerrar subdivisiones' : 'Abrir subdivisiones'}">${isOpen ? '\u2212' : '+'}</button>
+          <span class="name"><span class="swatch" style="background:${color}"></span>${escapeHtml(a.name)}</span>
+          <input class="pct-input" type="number" min="0" max="100" step="1" value="${a.pct}" data-asset-id="${a.id}">
+          <span class="pct-unit">% del ingreso</span>
+          <button class="del-btn" data-del-asset="${a.id}">Quitar activo</button>
+        </div>
+        ${subsBlock}
+      </div>`;
+  }).join('');
+
+  const statusHtml = state.assets.length === 0 ? '' :
+    (t === 100
+      ? '<span class="status-pill status-ok">Suman 100%</span>'
+      : '<span class="status-pill status-warn">Suman ' + t + '% — ajustá para llegar a 100%</span>');
+
+  const body = state.assets.length === 0
+    ? '<div class="empty-state">Todavía no definiste activos. Agregá el primero abajo.</div>'
+    : `${cards}<div class="totals-line">Total del ingreso repartido ${statusHtml}</div>`;
+
+  return `
+    <p class="section-lead">Definí los activos de tu cartera y qué porcentaje del ingreso semanal va para cada uno. Dentro de un activo podés subdividir en opciones puntuales (por ejemplo, dentro de "cripto": Solana, XRP), donde el % de cada subdivisión se calcula sobre lo que le toca al activo padre.</p>
+    ${body}
+    <div class="form-row">
+      <div class="field grow">
+        <label for="new-asset-name">Nombre del activo</label>
+        <input type="text" id="new-asset-name" placeholder="Ej: acciones, cripto, plazo fijo">
+      </div>
+      <div class="field">
+        <label for="new-asset-pct">Meta %</label>
+        <input type="number" id="new-asset-pct" min="0" max="100" step="1" placeholder="30" style="min-width:80px;">
+      </div>
+      <button class="primary" id="add-asset-btn">Agregar activo</button>
+    </div>
+  `;
+}
+
+function wireAssetsTab(){
+  if(activeTab !== 'assets') return;
+  const btn = document.getElementById('add-asset-btn');
+  if(btn){
+    btn.onclick = ()=>{
+      addAsset(document.getElementById('new-asset-name').value, document.getElementById('new-asset-pct').value);
+    };
+  }
+  document.querySelectorAll('[data-asset-id]').forEach(inp=>{
+    inp.onchange = ()=> updateAssetPct(inp.getAttribute('data-asset-id'), inp.value);
+  });
+  document.querySelectorAll('[data-del-asset]').forEach(b=>{
+    b.onclick = ()=> removeAsset(b.getAttribute('data-del-asset'));
+  });
+  document.querySelectorAll('[data-toggle-asset]').forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.getAttribute('data-toggle-asset');
+      if(expandedAssets.has(id)) expandedAssets.delete(id); else expandedAssets.add(id);
+      render();
+    };
+  });
+  document.querySelectorAll('[data-sub-asset]').forEach(inp=>{
+    inp.onchange = ()=> updateSubPct(inp.getAttribute('data-sub-asset'), inp.getAttribute('data-sub-id'), inp.value);
+  });
+  document.querySelectorAll('[data-del-sub-asset]').forEach(b=>{
+    b.onclick = ()=> removeSub(b.getAttribute('data-del-sub-asset'), b.getAttribute('data-del-sub-id'));
+  });
+  document.querySelectorAll('[data-newsub-add]').forEach(b=>{
+    b.onclick = ()=>{
+      const assetId = b.getAttribute('data-newsub-add');
+      const nameInp = document.querySelector('[data-newsub-name="'+assetId+'"]');
+      const pctInp = document.querySelector('[data-newsub-pct="'+assetId+'"]');
+      addSub(assetId, nameInp.value, pctInp.value);
+    };
+  });
+}
+
+function buildColumns(){
+  const cols = [];
+  state.assets.forEach((a,i)=>{
+    const color = ASSET_COLORS[i % ASSET_COLORS.length];
+    if(a.subs.length){
+      a.subs.forEach(s=>{
+        cols.push({ colKey:a.id+'__'+s.id, assetName:a.name, subName:s.name, color, calc:(amount)=> amount * (Number(a.pct)||0)/100 * (Number(s.pct)||0)/100 });
+      });
+    }else{
+      cols.push({ colKey:a.id, assetName:a.name, subName:null, color, calc:(amount)=> amount * (Number(a.pct)||0)/100 });
+    }
+  });
+  return cols;
+}
+
+function computeColumnSummary(col){
+  let totalInvested = 0;
+  let pricedAmount = 0;
+  let pricedQty = 0;
+  state.entries.forEach(e=>{
+    const amt = col.calc(e.amount);
+    totalInvested += amt;
+    const price = e.prices && e.prices[col.colKey];
+    if(price && price > 0){
+      pricedAmount += amt;
+      pricedQty += amt / price;
+    }
+  });
+  const avgPrice = pricedQty > 0 ? pricedAmount / pricedQty : null;
+  return { totalInvested, avgPrice, qty: pricedQty };
+}
+
+function renderIncomeTab(){
+  if(state.assets.length === 0){
+    return `<p class="section-lead">Antes de cargar ingresos, definí al menos un activo en la pestaña <strong>Activos</strong>.</p>`;
+  }
+
+  const t = totalPct();
+  const warnHtml = t !== 100
+    ? '<span class="status-pill status-warn">Tus metas suman ' + t + '%, no 100% — el cálculo de abajo va a ser aproximado</span>'
+    : '';
+
+  const cols = buildColumns();
+  const headers = cols.map(c=>`<th><span class="h-asset"><span class="swatch" style="background:${c.color}"></span>${escapeHtml(c.assetName)}</span>${c.subName ? '<span class="h-sub">'+escapeHtml(c.subName)+'</span>' : ''}</th>`).join('');
+
+  const rows = state.entries.map(e=>{
+    const cells = cols.map(c=>{
+      const amt = c.calc(e.amount);
+      const priceVal = (e.prices && e.prices[c.colKey]) ? e.prices[c.colKey] : '';
+      return `<td>
+        <div class="cell-amount">${fmtMoney(amt)}</div>
+        <input class="price-input" type="number" min="0" step="0.01" placeholder="precio" value="${priceVal}" data-price-entry="${e.id}" data-price-col="${c.colKey}">
+      </td>`;
+    }).join('');
+    return `<tr>
+      <td class="date-cell">${e.date}</td>
+      <td>${fmtMoney(e.amount)}</td>
+      ${cells}
+      <td><button class="del-btn" data-del-entry="${e.id}">Quitar</button></td>
+    </tr>`;
+  }).join('');
+
+  const tableOrEmpty = state.entries.length === 0
+    ? '<div class="empty-state">Todavía no cargaste ingresos. Cargá el primero abajo.</div>'
+    : `<div class="table-scroll"><table>
+        <thead><tr><th><span class="h-asset">Fecha</span></th><th><span class="h-asset">Ingreso</span></th>${headers}<th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+
+  const summaryRows = cols.map(c=>{
+    const s = computeColumnSummary(c);
+    const label = c.subName ? escapeHtml(c.assetName) + ' — ' + escapeHtml(c.subName) : escapeHtml(c.assetName);
+    return `<tr>
+      <td class="date-cell"><span class="swatch" style="background:${c.color}"></span>${label}</td>
+      <td class="cell-amount">${fmtMoney(s.totalInvested)}</td>
+      <td>${s.avgPrice !== null ? fmtMoney(s.avgPrice) : '<span class="qty-muted">sin precios cargados</span>'}</td>
+      <td>${s.avgPrice !== null ? '<span class="qty-muted">'+ s.qty.toFixed(4) +'</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const summaryBlock = state.entries.length === 0 ? '' : `
+    <div class="summary-block">
+      <h2 class="summary-title">Total invertido y precio promedio</h2>
+      <div class="table-scroll"><table>
+        <thead><tr><th><span class="h-asset">Activo</span></th><th><span class="h-asset">Total invertido</span></th><th><span class="h-asset">Precio promedio</span></th><th><span class="h-asset">Cantidad</span></th></tr></thead>
+        <tbody>${summaryRows}</tbody>
+      </table></div>
+    </div>`;
+
+  const today = new Date().toISOString().slice(0,10);
+
+  return `
+    <p class="section-lead">Cargá lo que ingresó esta semana en dólares. Debajo del monto de cada activo podés anotar el precio al que compraste ese día — con eso la app arma tu precio promedio ponderado.${warnHtml}</p>
+    ${tableOrEmpty}
+    ${summaryBlock}
+    <div class="form-row">
+      <div class="field">
+        <label for="new-entry-date">Fecha</label>
+        <input type="date" id="new-entry-date" value="${today}">
+      </div>
+      <div class="field">
+        <label for="new-entry-amount">Monto (USD)</label>
+        <input type="number" id="new-entry-amount" min="0" step="0.01" placeholder="500">
+      </div>
+      <button class="primary" id="add-entry-btn">Cargar ingreso</button>
+    </div>
+  `;
+}
+
+function wireIncomeTab(){
+  if(activeTab !== 'income') return;
+  const btn = document.getElementById('add-entry-btn');
+  if(btn){
+    btn.onclick = ()=>{
+      addEntry(document.getElementById('new-entry-date').value, document.getElementById('new-entry-amount').value);
+    };
+  }
+  document.querySelectorAll('[data-del-entry]').forEach(b=>{
+    b.onclick = ()=> removeEntry(b.getAttribute('data-del-entry'));
+  });
+  document.querySelectorAll('[data-price-entry]').forEach(inp=>{
+    inp.onchange = ()=> updateEntryPrice(inp.getAttribute('data-price-entry'), inp.getAttribute('data-price-col'), inp.value);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+loadState();
+</script>
+</body>
+</html>
